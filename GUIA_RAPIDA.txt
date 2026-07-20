@@ -1,0 +1,45 @@
+VIDEO A ESPAÑOL — GUÍA RÁPIDA
+================================
+
+INSTALAR
+1. Descomprime el ZIP.
+2. Abre chrome://extensions
+3. Activa "Modo de desarrollador".
+4. Pulsa "Cargar descomprimida".
+5. Selecciona la carpeta DobladorEspanolLocal.
+
+USAR
+1. Pega un enlace o sube el video o audio.
+   Elige "Está en inglés" o "Ya está en español".
+2. Si tienes SRT/VTT/TXT, cárgalo. Si no, pulsa "Transcribir inglés".
+3. Pulsa "Traducir todo" y corrige el español.
+4. Elige "Voz neural del navegador" y pulsa "Generar voz española".
+5. Descarga TXT, SRT, VTT, WAV o crea el video doblado.
+
+USAR UN ENLACE
+- Pega YouTube, SRT, VTT, TXT, MP4 o MP3 en la caja superior.
+- "Extraer subtítulos" conserva el idioma original.
+- "Extraer + traducir" pide la versión española a YouTube. Si no existe,
+  cambia automáticamente al traductor gratuito de Chrome o al modelo local.
+- Chrome pedirá permiso para leer solamente ese sitio.
+- "Ver diagnóstico de YouTube" explica si encontró pistas o si fueron bloqueadas.
+- Si YouTube exige PO token, se abrirá una pestaña temporal, se leerá
+  "Mostrar transcripción" y se cerrará automáticamente para volver al editor.
+- YouTube necesita que el video publique subtítulos; de lo contrario debes subir el archivo para transcribirlo.
+
+ESCUCHAR DE INMEDIATO
+- Pulsa "Escuchar español" después de traducir o cargar texto español.
+- Pulsa "Detener" para cancelar la lectura.
+- Cuando la pista esté creada, usa "Reproducir" para oír el WAV generado.
+
+IMPORTANTE
+- La primera descarga de cada modelo necesita internet y puede tardar.
+- Después los modelos quedan guardados en Chrome.
+- Los archivos no se suben a un servidor del autor.
+- Para videos largos, deja la pestaña abierta hasta que termine.
+
+VOZ OPCIONAL EN WINDOWS
+- Piper neural: ejecuta Instalar_e_Iniciar_Piper.bat
+- Voces instaladas: ejecuta Iniciar_Voz_Windows.bat
+
+Lee README.md para instrucciones y límites detallados.

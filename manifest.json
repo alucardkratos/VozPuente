@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Video a Español — Doblador Local",
+  "version": "2.4.0",
+  "description": "Extrae o transcribe videos y enlaces, traduce al español y crea una voz local sin suscripciones.",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "icon-16.png",
+    "32": "icon-32.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "action": {
+    "default_title": "Abrir Doblador Local",
+    "default_icon": {
+      "16": "icon-16.png",
+      "32": "icon-32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "scripting",
+    "storage",
+    "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "https://huggingface.co/*",
+    "https://*.huggingface.co/*",
+    "https://*.hf.co/*",
+    "http://127.0.0.1:8765/*",
+    "http://localhost:8765/*",
+    "http://127.0.0.1:5000/*",
+    "http://localhost:5000/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self'"
+  }
+}

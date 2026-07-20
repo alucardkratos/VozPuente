@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Video a Español — Doblador Local</title>
+    <link rel="stylesheet" href="app.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span>ES</span>
+          </div>
+          <div>
+            <strong>Video a Español</strong>
+            <small>Doblador local</small>
+          </div>
+        </div>
+
+        <nav class="steps" aria-label="Proceso del proyecto">
+          <button class="step-button is-active" data-step="1" type="button">
+            <span class="step-number">1</span>
+            <span><b>Archivo</b><small>Video, audio o subtítulos</small></span>
+            <i class="step-check">✓</i>
+          </button>
+          <button class="step-button" data-step="2" type="button">
+            <span class="step-number">2</span>
+            <span><b>Transcripción</b><small>Texto original del archivo</small></span>
+            <i class="step-check">✓</i>
+          </button>
+          <button class="step-button" data-step="3" type="button">
+            <span class="step-number">3</span>
+            <span><b>Traducción</b><small>Corrección en español</small></span>
+            <i class="step-check">✓</i>
+          </button>
+          <button class="step-button" data-step="4" type="button">
+            <span class="step-number">4</span>
+            <span><b>Voz</b><small>Narración española</small></span>
+            <i class="step-check">✓</i>
+          </button>
+          <button class="step-button" data-step="5" type="button">
+            <span class="step-number">5</span>
+            <span><b>Descargar</b><small>Audio, subtítulos o video</small></span>
+            <i class="step-check">✓</i>
+          </button>
+        </nav>
+
+        <div class="privacy-note">
+          <span class="privacy-icon">⌁</span>
+          <div><b>Privado por diseño</b><small>Los archivos no se suben a un servidor. Los modelos se ejecutan en tu navegador.</small></div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div class="project-name">
+            <span class="status-dot"></span>
+            <input id="projectTitle" value="Mi video en español" aria-label="Nombre del proyecto">
+            <span id="savedState">Guardado local</span>
+          </div>
+          <div class="top-status">
+            <span class="pill pill-free">Gratis · sin cuenta</span>
+            <button class="icon-button" id="openHelp" type="button" title="Ayuda">?</button>
+          </div>
+        </header>
+
+        <div class="content">
+          <section class="stage is-active" data-stage="1">
+            <div class="stage-heading hero-heading">
+              <span class="eyebrow">PASO 1 · ARCHIVO ORIGINAL</span>
+              <h1>Convierte un video en inglés a español</h1>
+              <p>Sube el video y la extensión obtiene el texto, lo traduce y crea la voz española. También puedes empezar con un SRT, VTT o TXT.</p>
+            </div>
+
+            <div class="card link-import-card">
+              <div class="link-import-icon" aria-hidden="true">↗</div>
+              <div class="link-import-copy">
+                <label for="videoLink">Pegar enlace del video o de los subtítulos</label>
+                <div class="link-input-row">
+                  <input id="videoLink" type="url" inputmode="url" placeholder="https://youtube.com/watch?v=…  o  https://sitio.com/subtitulos.srt">
+                  <button class="secondary-button" id="extractLink" type="button">Extraer subtítulos</button>
+                  <button class="primary-button" id="extractTranslateLink" type="button">Extraer + traducir</button>
+                </div>
+                <p id="linkSupport">YouTube con subtítulos o transcripción visible · enlaces SRT/VTT/TXT · páginas con pista &lt;track&gt;</p>
+                <details id="linkDiagnostics" class="link-diagnostics is-hidden">
+                  <summary>Ver diagnóstico de YouTube</summary>
+                  <ol id="linkDiagnosticText"></ol>
+                </details>
+              </div>
+            </div>
+
+            <div class="language-choice" aria-label="Idioma original del archivo">
+              <div class="language-choice-copy">
+                <span class="language-icon">A/Ñ</span>
+                <div><b>¿En qué idioma está el archivo?</b><small>Esto decide si debe traducirse o solamente leerse.</small></div>
+              </div>
+              <div class="language-switch">
+                <label class="is-selected">
+                  <input type="radio" name="sourceLanguage" value="en" checked>
+                  <span><b>Está en inglés</b><small>Transcribir y traducir</small></span>
+                </label>
+                <label>
+                  <input type="radio" name="sourceLanguage" value="es">
+                  <span><b>Ya está en español</b><small>Leer directamente</small></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="source-layout">
+              <div class="card upload-card" id="mediaDrop" tabindex="0" role="button" aria-label="Subir video o audio">
+                <input id="mediaInput" type="file" accept="video/*,audio/*,.mp4,.webm,.mov,.mkv,.mp3,.wav,.m4a,.ogg" hidden>
+                <div class="upload-visual" aria-hidden="true">
+                  <span class="play-triangle"></span>
+                  <span class="sound-wave">▮▮▮</span>
+                </div>
+                <h2>Subir video o audio</h2>
+                <p>MP4, WebM, MOV, MP3, WAV, M4A y otros formatos que Chrome pueda reproducir.</p>
+                <button class="primary-button" id="pickMedia" type="button">Elegir archivo</button>
+                <small>o arrástralo aquí</small>
+              </div>
+
+              <div class="source-alternatives">
+                <div class="card compact-card">
+                  <div class="card-icon">CC</div>
+                  <div class="compact-copy">
+                    <h3>¿Ya tienes subtítulos?</h3>
+                    <p>Carga un SRT o VTT. Es más rápido y evita transcribir.</p>
+                  </div>
+                  <button class="secondary-button" id="pickSubtitle" type="button">Cargar SRT / VTT / TXT</button>
+                  <input id="subtitleInput" type="file" accept=".srt,.vtt,.txt,.md,text/plain" hidden>
+                </div>
+
+                <div class="card paste-card">
+                  <div class="paste-heading">
+                    <div><h3>O pega una transcripción</h3><p>Inglés o español; podrás corregirla después.</p></div>
+                    <span class="mini-pill">TXT</span>
+                  </div>
+                  <textarea id="pasteText" rows="6" placeholder="Pega aquí el texto del video…"></textarea>
+                  <button class="text-button" id="usePastedText" type="button">Usar este texto <span>→</span></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card media-card is-hidden" id="mediaCard">
+              <div class="media-preview-wrap">
+                <video id="videoPreview" controls playsinline></video>
+                <audio id="audioSourcePreview" controls></audio>
+              </div>
+              <div class="media-details">
+                <span class="eyebrow">ARCHIVO CARGADO</span>
+                <h2 id="mediaName">video.mp4</h2>
+                <p id="mediaMeta">Esperando información…</p>
+                <div class="media-actions">
+                  <button class="secondary-button" id="replaceMedia" type="button">Cambiar archivo</button>
+                  <button class="primary-button" id="mediaContinue" type="button">Continuar a transcripción <span>→</span></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="expectation-row">
+              <div><span>1</span><p><b>Obtiene el inglés</b>Desde subtítulos o desde el audio.</p></div>
+              <div><span>2</span><p><b>Traduce al español</b>Automático y editable.</p></div>
+              <div><span>3</span><p><b>Crea la nueva voz</b>Local, descargable y sin cuotas.</p></div>
+            </div>
+          </section>
+
+          <section class="stage" data-stage="2">
+            <div class="stage-heading split-heading">
+              <div>
+                <span class="eyebrow">PASO 2 · TRANSCRIPCIÓN</span>
+                <h1 id="transcriptTitle">Texto original en inglés</h1>
+                <p id="transcriptDescription">Si cargaste subtítulos, aparecerán aquí. Si solo cargaste el video, usa el modelo Whisper local.</p>
+              </div>
+              <div class="heading-actions">
+                <button class="secondary-button" id="importTranscript" type="button">Importar subtítulos</button>
+                <button class="primary-button" id="transcribeMedia" type="button">Transcribir inglés</button>
+              </div>
+            </div>
+
+            <div class="notice info-notice" id="transcriptionNotice">
+              <span>i</span>
+              <div><b>Transcripción gratuita dentro del navegador</b><p>La primera vez se descarga un modelo de IA. Después queda guardado y puede reutilizarse sin subir el video.</p></div>
+            </div>
+
+            <div class="editor-toolbar">
+              <div class="metric"><b id="cueCount">0</b><span>segmentos</span></div>
+              <div class="metric"><b id="sourceWordCount">0</b><span>palabras</span></div>
+              <div class="toolbar-spacer"></div>
+              <button class="text-button" id="addCue" type="button">+ Añadir segmento</button>
+              <button class="text-button" id="downloadEnglishTxt" type="button">TXT inglés</button>
+              <button class="text-button" id="downloadEnglishSrt" type="button">SRT inglés</button>
+            </div>
+
+            <div class="card cue-editor">
+              <div class="cue-header cue-source-grid"><span>TIEMPO</span><span>TEXTO ORIGINAL</span><span></span></div>
+              <div id="sourceRows" class="cue-rows"></div>
+              <div class="empty-editor" id="sourceEmpty">
+                <div class="empty-icon">“ ”</div>
+                <h3>Todavía no hay una transcripción</h3>
+                <p>Carga SRT/VTT/TXT o transcribe el audio del archivo.</p>
+              </div>
+            </div>
+
+            <div class="stage-footer">
+              <button class="secondary-button" data-go="1" type="button">← Archivo</button>
+              <button class="primary-button" id="goTranslate" type="button">Traducir al español <span>→</span></button>
+            </div>
+          </section>
+
+          <section class="stage" data-stage="3">
+            <div class="stage-heading split-heading">
+              <div>
+                <span class="eyebrow">PASO 3 · TRADUCCIÓN</span>
+                <h1 id="translationTitle">Traducción y corrección</h1>
+                <p id="translationDescription">Traduce automáticamente y corrige cualquier frase antes de crear la voz.</p>
+              </div>
+              <div class="translation-control">
+                <label for="translationEngine">Motor gratuito</label>
+                <select id="translationEngine">
+                  <option value="chrome">Chrome · integrado y local</option>
+                  <option value="local">Modelo local alternativo</option>
+                  <option value="copy">El texto ya está en español</option>
+                </select>
+                <button class="primary-button" id="translateAll" type="button">Traducir todo</button>
+              </div>
+            </div>
+
+            <div class="notice success-notice" id="translatorNotice">
+              <span>✓</span>
+              <div><b id="translatorStatus">Comprobando traductor de Chrome…</b><p id="translatorDetail">Si no está disponible, puedes usar el modelo local alternativo.</p></div>
+            </div>
+
+            <div class="editor-toolbar">
+              <div class="metric"><b id="translatedCount">0</b><span>traducidos</span></div>
+              <div class="metric"><b id="spanishWordCount">0</b><span>palabras en español</span></div>
+              <div class="toolbar-spacer"></div>
+              <button class="text-button listen-button" id="speakSpanish" type="button">▶ Escuchar español</button>
+              <button class="text-button" id="stopSpeaking" type="button">■ Detener</button>
+              <button class="text-button" id="copySourceToTarget" type="button">Copiar original</button>
+              <button class="text-button" id="clearTranslation" type="button">Borrar español</button>
+            </div>
+
+            <div class="card cue-editor translation-editor">
+              <div class="cue-header cue-translation-grid"><span>TIEMPO</span><span id="sourceColumnLabel">INGLÉS</span><span>ESPAÑOL EDITABLE</span></div>
+              <div id="translationRows" class="cue-rows"></div>
+              <div class="empty-editor" id="translationEmpty">
+                <h3>Primero necesitas el texto original</h3>
+                <p>Regresa a Transcripción para cargarlo o generarlo.</p>
+              </div>
+            </div>
+
+            <div class="stage-footer">
+              <button class="secondary-button" data-go="2" type="button">← Transcripción</button>
+              <button class="primary-button" id="goVoice" type="button">Crear voz española <span>→</span></button>
+            </div>
+          </section>
+
+          <section class="stage" data-stage="4">
+            <div class="stage-heading">
+              <span class="eyebrow">PASO 4 · VOZ ESPAÑOLA</span>
+              <h1>Elige cómo sonará la narración</h1>
+              <p>La opción recomendada se ejecuta directamente en Chrome. Piper ofrece otra voz neural si prefieres instalarla en Windows.</p>
+            </div>
+
+            <div class="voice-grid">
+              <label class="voice-card is-selected">
+                <input type="radio" name="voiceEngine" value="browser" checked>
+                <span class="recommended-ribbon">RECOMENDADO</span>
+                <span class="voice-avatar browser-avatar">AI</span>
+                <span class="voice-copy"><b>Voz neural del navegador</b><small>Español · modelo MMS local</small><em>Gratis · sin instalar programas</em></span>
+                <span class="radio-mark"></span>
+              </label>
+              <label class="voice-card">
+                <input type="radio" name="voiceEngine" value="piper">
+                <span class="voice-avatar piper-avatar">P</span>
+                <span class="voice-copy"><b>Piper neural</b><small>Español mexicano · Claude</small><em>Gratis · instalación opcional</em></span>
+                <span class="radio-mark"></span>
+              </label>
+              <label class="voice-card">
+                <input type="radio" name="voiceEngine" value="windows">
+                <span class="voice-avatar windows-avatar">W</span>
+                <span class="voice-copy"><b>Voces de Windows</b><small>Usa las voces instaladas</small><em>Rápido · calidad variable</em></span>
+                <span class="radio-mark"></span>
+              </label>
+            </div>
+
+            <div class="card voice-settings">
+              <div class="setting-row">
+                <div><label for="voiceSpeed">Velocidad / ajuste al video</label><p>Una voz un poco más rápida ayuda a respetar los tiempos de los subtítulos.</p></div>
+                <div class="range-control"><input id="voiceSpeed" type="range" min="85" max="130" value="105"><output id="voiceSpeedValue">1.05×</output></div>
+              </div>
+              <div class="setting-row server-setting is-hidden" id="piperSetting">
+                <div><label>Piper local</label><p>Ejecuta <b>Instalar_e_Iniciar_Piper.bat</b> y deja abierta la ventana.</p></div>
+                <button class="secondary-button" id="checkPiper" type="button">Comprobar conexión</button>
+              </div>
+              <div class="setting-row server-setting is-hidden" id="windowsSetting">
+                <div><label for="windowsVoice">Voz de Windows</label><p>Ejecuta <b>Iniciar_Voz_Windows.bat</b> antes de generar.</p></div>
+                <div class="inline-control"><select id="windowsVoice"><option value="">Voz predeterminada</option></select><button class="secondary-button" id="checkWindows" type="button">Conectar</button></div>
+              </div>
+            </div>
+
+            <div class="notice info-notice">
+              <span>↓</span>
+              <div><b>La primera generación puede tardar</b><p>El modelo de voz se descarga una sola vez. Chrome lo guarda localmente para los siguientes proyectos.</p></div>
+            </div>
+
+            <div class="voice-action">
+              <div class="voice-action-buttons">
+                <button class="secondary-button large-button" id="previewSpanishVoice" type="button">▶ Escuchar texto ahora</button>
+                <button class="primary-button large-button" id="generateVoice" type="button"><span class="button-icon">↓</span> Generar voz española</button>
+              </div>
+              <p id="voiceHint">Se creará un WAV sincronizado con los tiempos de la traducción.</p>
+            </div>
+
+            <div class="card generated-audio is-hidden" id="generatedAudioCard">
+              <div class="audio-art">ES</div>
+              <div class="audio-player-copy"><b>Pista española lista</b><span id="audioMeta">WAV · lista para descargar</span><audio id="spanishAudioPreview" controls></audio></div>
+              <div class="generated-audio-actions">
+                <button class="secondary-button" id="playGeneratedAudio" type="button">▶ Reproducir</button>
+                <button class="text-button" id="stopGeneratedAudio" type="button">■ Detener</button>
+                <button class="secondary-button" id="downloadSpanishWav" type="button">Descargar WAV</button>
+              </div>
+            </div>
+
+            <div class="stage-footer">
+              <button class="secondary-button" data-go="3" type="button">← Traducción</button>
+              <button class="primary-button" id="goExport" type="button">Ver descargas <span>→</span></button>
+            </div>
+          </section>
+
+          <section class="stage" data-stage="5">
+            <div class="stage-heading">
+              <span class="eyebrow">PASO 5 · DESCARGAR</span>
+              <h1>Tu versión en español</h1>
+              <p>Descarga solo lo que necesitas. Los subtítulos no requieren generar la voz.</p>
+            </div>
+
+            <div class="export-grid">
+              <div class="card export-card">
+                <div class="export-icon text-export">TXT</div>
+                <div><h3>Transcripción española</h3><p>Texto limpio para copiar, corregir o reutilizar.</p></div>
+                <button class="secondary-button" id="exportSpanishTxt" type="button">Descargar TXT</button>
+              </div>
+              <div class="card export-card">
+                <div class="export-icon subtitle-export">CC</div>
+                <div><h3>Subtítulos españoles</h3><p>SRT o VTT con los tiempos conservados.</p></div>
+                <div class="button-pair"><button class="secondary-button" id="exportSpanishSrt" type="button">SRT</button><button class="secondary-button" id="exportSpanishVtt" type="button">VTT</button></div>
+              </div>
+              <div class="card export-card">
+                <div class="export-icon audio-export">WAV</div>
+                <div><h3>Audio doblado</h3><p>Pista española sincronizada, sin el video.</p></div>
+                <button class="secondary-button" id="exportSpanishWav" type="button">Descargar WAV</button>
+              </div>
+              <div class="card export-card featured-export">
+                <span class="recommended-ribbon">VIDEO FINAL</span>
+                <div class="export-icon video-export">▶</div>
+                <div><h3>Video doblado</h3><p>Imagen original + voz española. Se procesa en tiempo real.</p></div>
+                <label class="check-row"><input id="burnSubtitles" type="checkbox" checked><span>Incluir subtítulos españoles visibles</span></label>
+                <button class="primary-button" id="exportDubbedVideo" type="button">Crear video doblado</button>
+              </div>
+            </div>
+
+            <div class="card final-summary">
+              <div class="summary-mark">✓</div>
+              <div><b id="finalProjectTitle">Mi video en español</b><p id="finalSummaryText">Revisa los pasos anteriores si deseas corregir una frase o cambiar la voz.</p></div>
+              <button class="text-button" data-go="1" type="button">Empezar otro proyecto</button>
+            </div>
+
+            <div class="stage-footer">
+              <button class="secondary-button" data-go="4" type="button">← Voz</button>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="task-panel is-hidden" id="taskPanel" role="status" aria-live="polite">
+      <div class="task-topline"><div><b id="taskTitle">Preparando…</b><span id="taskDetail">Un momento</span></div><button id="cancelTask" type="button">Cancelar</button></div>
+      <div class="progress-track"><div id="taskProgress"></div></div>
+    </div>
+
+    <dialog id="helpDialog">
+      <button class="dialog-close" id="closeHelp" type="button">×</button>
+      <span class="eyebrow">AYUDA RÁPIDA</span>
+      <h2>El camino más sencillo</h2>
+      <ol>
+        <li><b>Sube el video.</b> Si tienes su SRT/VTT, cárgalo también.</li>
+        <li><b>Transcribe.</b> Solo hace falta cuando no tienes subtítulos.</li>
+        <li><b>Traduce y corrige.</b> Cada segmento queda editable.</li>
+        <li><b>Genera la voz.</b> El modelo del navegador es la opción más directa.</li>
+        <li><b>Descarga.</b> Puedes sacar TXT, SRT, VTT, WAV o el video doblado.</li>
+      </ol>
+      <p class="dialog-note">Los modelos de IA se descargan la primera vez. No cierres la pestaña durante esa descarga.</p>
+    </dialog>
+
+    <canvas id="renderCanvas" hidden></canvas>
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
