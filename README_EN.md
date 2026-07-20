@@ -109,11 +109,12 @@ Uploaded media and text are processed locally. Model files are downloaded from t
 - Browser-supported codecs determine which local media files can be decoded.
 - Machine transcription and translation should be reviewed before publishing.
 
-## Submission details
+## License and submission details
 
 - Track: **Education**
 - Platform: Chrome on Windows 10/11
 - Session ID: add the Codex `/feedback` ID before Devpost submission
-- License/repository visibility: use a private repository shared with `testing@devpost.com` and `build-week-event@openai.com`, unless a public license is chosen before submission.
+- Repository visibility: **public**
+- Project license: **MIT** — see `LICENSE`
 
 Third-party components and licenses are documented in `TERCEROS.md`.

@@ -27,6 +27,7 @@ const requiredFiles = [
   "Instalar_e_Iniciar_Piper.bat",
   "README.md",
   "README_EN.md",
+  "LICENSE",
   "BUILD_WEEK_SUBMISSION.md",
   "demo/vozpuente-demo-en.mp4",
   "demo/vozpuente-demo-en.srt"

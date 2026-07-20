@@ -126,3 +126,7 @@ El video y los textos no se envían a un servidor del autor. Whisper, el traduct
 - [Piper](https://github.com/OHF-Voice/piper1-gpl)
 
 Las licencias del cargador Transformers.js se incluyen en `vendor/`. Los modelos mantienen sus propias licencias y se descargan desde sus páginas originales.
+
+## Licencia del proyecto
+
+VozPuente se publica bajo licencia MIT. Consulta `LICENSE`. Los componentes y modelos de terceros conservan sus propias licencias.
