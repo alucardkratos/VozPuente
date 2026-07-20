@@ -1,5 +1,5 @@
 # VozPuente — Video a Español
-
+> **Build Week judges:** [Read the English README](README_EN.md), including setup, the testing path, project architecture, limitations, and how Codex with GPT-5.6 was used.
 **Versión Build Week 3.0.0.** Extensión educativa para que una persona hispanohablante convierta videos, audios y subtítulos en contenido español legible y narrado, con prioridad por herramientas gratuitas y procesamiento local.
 
 ## Flujo automático principal
