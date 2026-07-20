@@ -1,0 +1,11 @@
+1
+00:00:00,000 --> 00:00:03,000
+Welcome to this original VozPuente demonstration.
+
+2
+00:00:03,000 --> 00:00:06,500
+Learning should not stop at a language barrier.
+
+3
+00:00:06,500 --> 00:00:09,900
+This extension turns English speech into Spanish text and local voice.

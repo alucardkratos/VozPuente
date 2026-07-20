@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Video a Español — Doblador Local",
-  "version": "2.4.0",
+  "name": "VozPuente — Video a Español",
+  "version": "3.0.0",
   "description": "Extrae o transcribe videos y enlaces, traduce al español y crea una voz local sin suscripciones.",
   "minimum_chrome_version": "116",
   "icons": {
@@ -11,7 +11,7 @@
     "128": "icon-128.png"
   },
   "action": {
-    "default_title": "Abrir Doblador Local",
+    "default_title": "Abrir VozPuente",
     "default_icon": {
       "16": "icon-16.png",
       "32": "icon-32.png"

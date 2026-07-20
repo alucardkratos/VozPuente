@@ -1,0 +1,11 @@
+1
+00:00:00,000 --> 00:00:03,000
+Bienvenido a esta demostración original de VozPuente.
+
+2
+00:00:03,000 --> 00:00:06,500
+El aprendizaje no debería detenerse por una barrera de idioma.
+
+3
+00:00:06,500 --> 00:00:09,900
+Esta extensión convierte voz inglesa en texto español y voz local.

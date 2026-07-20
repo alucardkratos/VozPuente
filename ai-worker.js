@@ -74,8 +74,9 @@ function normalizeTimestamp(value, fallback = 0) {
 
 async function transcribe(taskId, audio, language = "en") {
   const spanish = language === "es";
-  const transcriber = await getPipeline(spanish ? "transcription-es" : "transcription-en", taskId);
-  emit(taskId, "phase", { detail: `Escuchando el audio en ${spanish ? "español" : "inglés"}…`, progress: 76 });
+  const automatic = language === "auto";
+  const transcriber = await getPipeline(spanish || automatic ? "transcription-es" : "transcription-en", taskId);
+  emit(taskId, "phase", { detail: automatic ? "Detectando si el audio está en inglés o español…" : `Escuchando el audio en ${spanish ? "español" : "inglés"}…`, progress: 76 });
   const options = {
     chunk_length_s: 30,
     stride_length_s: 5,
@@ -102,7 +103,7 @@ async function transcribe(taskId, audio, language = "en") {
     chunks = [{ start: 0, end: Math.max(4, audio.length / 16000), text: String(result.text).trim() }];
   }
 
-  emit(taskId, "result", { result: { text: String(result?.text || "").trim(), chunks } });
+  emit(taskId, "result", { result: { text: String(result?.text || "").trim(), language: result?.language || (spanish ? "es" : automatic ? "" : "en"), chunks } });
 }
 
 async function translate(taskId, texts) {

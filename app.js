@@ -43,9 +43,19 @@ const refs = {
   windowsVoice: $("#windowsVoice"),
   voiceSpeed: $("#voiceSpeed"),
   voiceSpeedValue: $("#voiceSpeedValue"),
+  voicePreviewAudio: $("#voicePreviewAudio"),
   generatedAudioCard: $("#generatedAudioCard"),
   spanishAudioPreview: $("#spanishAudioPreview"),
   audioMeta: $("#audioMeta"),
+  syncNoMedia: $("#syncNoMedia"),
+  syncWorkspace: $("#syncWorkspace"),
+  syncVideoPreview: $("#syncVideoPreview"),
+  syncSourceAudioPreview: $("#syncSourceAudioPreview"),
+  syncSeekInput: $("#syncSeekInput"),
+  syncCurrentTime: $("#syncCurrentTime"),
+  syncOffset: $("#syncOffset"),
+  syncOriginalAudio: $("#syncOriginalAudio"),
+  syncStatus: $("#syncStatus"),
   finalProjectTitle: $("#finalProjectTitle"),
   finalSummaryText: $("#finalSummaryText"),
   taskPanel: $("#taskPanel"),
@@ -69,6 +79,9 @@ const state = {
   spanishAudioBlob: null,
   spanishAudioUrl: "",
   audioSampleRate: 16000,
+  voicePreviewUrl: "",
+  syncOffset: 0,
+  generatedSyncOffset: 0,
   currentCancel: null,
   speechRun: 0,
   isSpeaking: false,
@@ -136,6 +149,7 @@ async function init() {
   renderAll();
   updateVoiceEngineUI();
   updateSourceLanguageUI();
+  updateSyncStudio();
   checkChromeTranslator();
 }
 
@@ -201,10 +215,28 @@ function bindEvents() {
   });
   $("#checkPiper").addEventListener("click", checkPiper);
   $("#checkWindows").addEventListener("click", checkWindows);
+  $("#downloadPiperInstaller").addEventListener("click", () => downloadPackagedAsset("Instalar_e_Iniciar_Piper.bat", "Instalar_e_Iniciar_Piper.bat"));
+  $("#downloadWindowsCompanion").addEventListener("click", () => downloadPackagedAsset("Asistente_Voz_Windows.zip", "Asistente_Voz_Windows.zip"));
   $("#generateVoice").addEventListener("click", generateSpanishVoice);
-  $("#previewSpanishVoice").addEventListener("click", speakSpanishNow);
+  $("#previewSpanishVoice").addEventListener("click", previewSelectedVoice);
   $("#playGeneratedAudio").addEventListener("click", playGeneratedAudio);
   $("#stopGeneratedAudio").addEventListener("click", stopGeneratedAudio);
+  $("#syncSeek").addEventListener("click", seekSyncFromInput);
+  refs.syncSeekInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") seekSyncFromInput();
+  });
+  $$('[data-sync-nudge]').forEach((button) => button.addEventListener("click", () => nudgeSync(Number(button.dataset.syncNudge))));
+  refs.syncOffset.addEventListener("change", updateSyncOffset);
+  refs.syncOffset.addEventListener("input", updateSyncOffset);
+  refs.syncOriginalAudio.addEventListener("change", updateSyncOriginalAudio);
+  $("#syncPlay").addEventListener("click", playSynchronizedPreview);
+  $("#syncPause").addEventListener("click", pauseSynchronizedPreview);
+  for (const player of [refs.syncVideoPreview, refs.syncSourceAudioPreview]) {
+    player.addEventListener("timeupdate", updateSyncClock);
+    player.addEventListener("seeked", keepDubbedPreviewAligned);
+    player.addEventListener("pause", () => refs.spanishAudioPreview.pause());
+    player.addEventListener("ended", () => refs.spanishAudioPreview.pause());
+  }
   $("#goExport").addEventListener("click", () => goToStep(5));
 
   $("#downloadEnglishTxt").addEventListener("click", () => downloadText("ingles", "txt"));
@@ -242,6 +274,7 @@ function goToStep(step) {
   refs.stepButtons.forEach((button) => button.classList.toggle("is-active", Number(button.dataset.step) === step));
   updateCompletion();
   if (step === 3) renderTranslationRows();
+  if (step === 4) updateSyncStudio();
   if (step === 5) updateFinalSummary();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -259,12 +292,13 @@ function requireTranslationThen(step) {
 }
 
 function selectedSourceLanguage() {
-  return $('input[name="sourceLanguage"]:checked')?.value || "en";
+  return $('input[name="sourceLanguage"]:checked')?.value || "auto";
 }
 
 function changeSourceLanguage() {
   stopSpeaking(false);
-  const spanish = selectedSourceLanguage() === "es";
+  const language = selectedSourceLanguage();
+  const spanish = language === "es";
   if (spanish) {
     state.cues.forEach((cue) => { cue.target = cue.source; });
     refs.translationEngine.value = "copy";
@@ -274,7 +308,9 @@ function changeSourceLanguage() {
       if (cue.target.trim() === cue.source.trim()) cue.target = "";
     });
     refs.translationEngine.value = "Translator" in self ? "chrome" : "local";
-    toast("Modo inglés activado: primero se traducirá al español.");
+    toast(language === "auto"
+      ? "Detección automática activada: Whisper decidirá si el audio está en inglés o español."
+      : "Modo inglés activado: primero se traducirá al español.");
   }
   clearSpanishAudio();
   updateSourceLanguageUI();
@@ -290,19 +326,23 @@ function applySourceLanguageToCues() {
 }
 
 function updateSourceLanguageUI() {
-  const spanish = selectedSourceLanguage() === "es";
+  const language = selectedSourceLanguage();
+  const spanish = language === "es";
+  const automatic = language === "auto";
   if (spanish) refs.translationEngine.value = "copy";
   $$(".language-switch label").forEach((label) => label.classList.toggle("is-selected", label.querySelector("input").checked));
-  refs.transcriptTitle.textContent = spanish ? "Texto original en español" : "Texto original en inglés";
+  refs.transcriptTitle.textContent = spanish ? "Texto original en español" : automatic ? "Texto original: idioma automático" : "Texto original en inglés";
   refs.transcriptDescription.textContent = spanish
     ? "Carga el texto español o transcribe el audio. Luego podrás escucharlo y generar la pista de voz directamente."
-    : "Si cargaste subtítulos, aparecerán aquí. Si solo cargaste el video, usa el modelo Whisper local.";
+    : automatic
+      ? "Whisper local detectará si el audio está en inglés o español antes de continuar."
+      : "Si cargaste subtítulos, aparecerán aquí. Si solo cargaste el video, usa el modelo Whisper local.";
   refs.translationTitle.textContent = spanish ? "Revisión del texto español" : "Traducción y corrección";
   refs.translationDescription.textContent = spanish
     ? "El archivo ya está en español: corrige el texto si hace falta y escúchalo sin pasar por un traductor."
     : "Traduce automáticamente y corrige cualquier frase antes de crear la voz.";
   refs.sourceColumnLabel.textContent = spanish ? "TEXTO ORIGINAL" : "INGLÉS";
-  $("#transcribeMedia").textContent = spanish ? "Transcribir español" : "Transcribir inglés";
+  $("#transcribeMedia").textContent = spanish ? "Transcribir español" : automatic ? "Detectar y transcribir" : "Transcribir inglés";
   $("#translateAll").textContent = spanish ? "Usar texto español" : "Traducir todo";
   $("#goTranslate").innerHTML = spanish ? "Revisar texto español <span>→</span>" : "Traducir al español <span>→</span>";
   refs.translationEngine.disabled = spanish;
@@ -330,6 +370,7 @@ async function loadMediaFile(file) {
   player.classList.remove("is-hidden");
   player.src = state.mediaUrl;
   player.load();
+  updateSyncMediaSource();
 
   refs.mediaCard.classList.remove("is-hidden");
   refs.mediaName.textContent = file.name;
@@ -358,6 +399,7 @@ async function loadTranscriptFile(file) {
     let cues = parseTimedText(text);
     if (!cues.length) cues = cuesFromPlainText(text, state.mediaDuration);
     if (!cues.length) throw new Error("El archivo está vacío o no contiene texto legible.");
+    if (selectedSourceLanguage() === "auto") setSourceLanguageSilently(normalizeDetectedLanguage("", cues.map((cue) => cue.source).join(" ")));
     state.cues = normalizeCues(cues);
     applySourceLanguageToCues();
     clearSpanishAudio();
@@ -376,6 +418,7 @@ function usePastedText() {
   const text = refs.pasteText.value.trim();
   if (!text) return toast("Pega algún texto primero.", true);
   const timed = parseTimedText(text);
+  if (selectedSourceLanguage() === "auto") setSourceLanguageSilently(normalizeDetectedLanguage("", text));
   state.cues = normalizeCues(timed.length ? timed : cuesFromPlainText(text, state.mediaDuration));
   applySourceLanguageToCues();
   clearSpanishAudio();
@@ -416,7 +459,7 @@ async function importFromLink(translateToSpanish) {
       result = await extractYouTubeCaptions(youtubeId, translateToSpanish, controller.signal);
     } else {
       await ensureLinkPermissions([url]);
-      result = await extractGenericLink(url, controller.signal);
+      result = await extractGenericLink(url, controller.signal, translateToSpanish ? "es" : selectedSourceLanguage());
     }
 
     if (result.mediaFile) {
@@ -532,7 +575,8 @@ async function extractYouTubeCaptions(videoId, translateToSpanish, signal) {
       : "YouTube no anunció pistas descargables; todavía se intentará leer el panel oficial del video.");
   }
 
-  const candidates = orderCaptionTracks(tracks, selectedSourceLanguage());
+  const preferredLanguage = translateToSpanish ? "es" : selectedSourceLanguage();
+  const candidates = orderCaptionTracks(tracks, preferredLanguage);
   const protectedCandidates = candidates.filter(requiresYouTubePoToken);
   const directCandidates = candidates.filter((candidate) => !requiresYouTubePoToken(candidate));
   let track = null;
@@ -563,7 +607,7 @@ async function extractYouTubeCaptions(videoId, translateToSpanish, signal) {
     try {
       sourceCues = await fetchYouTubeTranscriptPanelApi(videoId, pageHtml, signal);
       if (sourceCues.length) {
-        track = transcriptPanelTrack();
+        track = transcriptPanelTrack(preferredLanguage);
         addLinkDiagnostic(`La API del panel oficial entregó ${sourceCues.length} segmentos.`);
       }
     } catch (error) {
@@ -575,10 +619,10 @@ async function extractYouTubeCaptions(videoId, translateToSpanish, signal) {
   if (!sourceCues.length) {
     showTask("Abriendo temporalmente YouTube", "La extensión leerá el panel visible de transcripción y volverá aquí automáticamente…", 52);
     try {
-      const rendered = await extractYouTubeTranscriptFromTab(videoId, signal);
+      const rendered = await extractYouTubeTranscriptFromTab(videoId, signal, preferredLanguage);
       sourceCues = rendered.cues;
       title = rendered.title || title;
-      track = transcriptPanelTrack();
+      track = transcriptPanelTrack(preferredLanguage);
       addLinkDiagnostic(`Panel visible leído correctamente: ${sourceCues.length} segmentos. La pestaña temporal se cerró.`);
     } catch (error) {
       if (error?.name === "AbortError") throw error;
@@ -622,8 +666,8 @@ async function extractYouTubeCaptions(videoId, translateToSpanish, signal) {
   return { cues, sourceLanguage, title };
 }
 
-function transcriptPanelTrack() {
-  const languageCode = selectedSourceLanguage();
+function transcriptPanelTrack(preferredLanguage = selectedSourceLanguage()) {
+  const languageCode = preferredLanguage === "es" ? "es" : "en";
   return { languageCode, label: "Panel oficial de transcripción", kind: "panel", baseUrl: "" };
 }
 
@@ -838,7 +882,7 @@ function finishYouTubeTranscriptTimings(rawCues) {
   });
 }
 
-async function extractYouTubeTranscriptFromTab(videoId, signal) {
+async function extractYouTubeTranscriptFromTab(videoId, signal, preferredLanguage = selectedSourceLanguage()) {
   if (!chrome.tabs?.create || !chrome.scripting?.executeScript) {
     throw new Error("Recarga la extensión actualizada para activar la lectura del panel de YouTube.");
   }
@@ -855,7 +899,7 @@ async function extractYouTubeTranscriptFromTab(videoId, signal) {
     try { [originalTab] = await chrome.tabs.query({ active: true, currentWindow: true }); }
     catch (_) { originalTab = null; }
 
-    const captionLanguage = selectedSourceLanguage() === "es" ? "es" : "en";
+    const captionLanguage = preferredLanguage === "es" ? "es" : "en";
     temporaryTab = await chrome.tabs.create({
       url: `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}&hl=en&autoplay=0&cc_load_policy=1&cc_lang_pref=${captionLanguage}`,
       active: true
@@ -1277,7 +1321,7 @@ function alignTranslatedCaptions(sourceCues, translatedCues) {
   }
 }
 
-async function extractGenericLink(url, signal) {
+async function extractGenericLink(url, signal, preferredLanguage = selectedSourceLanguage()) {
   showTask("Leyendo el enlace", `Conectando con ${url.hostname}…`, 20);
   const response = await fetch(url, { signal, credentials: "include" });
   if (!response.ok) throw new Error(`El sitio respondió con el código ${response.status}.`);
@@ -1310,7 +1354,7 @@ async function extractGenericLink(url, signal) {
       label: track.getAttribute("label") || ""
     }));
     if (!tracks.length) throw new Error("La página no publica una pista SRT/VTT. Si el video tiene voz, descarga el archivo y usa Transcribir.");
-    const chosen = chooseCaptionTrack(tracks, selectedSourceLanguage());
+    const chosen = chooseCaptionTrack(tracks, preferredLanguage);
     await ensureLinkPermissions([chosen.url]);
     showTask("Descargando subtítulos", chosen.label || chosen.url.hostname, 58);
     const trackResponse = await fetch(chosen.url, { signal, credentials: "include" });
@@ -1632,23 +1676,44 @@ async function transcribeMedia() {
   showTask("Preparando el audio", "Intentando leer la pista de sonido…", 3);
   try {
     const audio = await extractAudio16k(state.mediaFile);
-    showTask(`Transcribiendo el ${language === "es" ? "español" : "inglés"}`, "Cargando Whisper local…", 46);
+    showTask(language === "auto" ? "Detectando y transcribiendo" : `Transcribiendo el ${language === "es" ? "español" : "inglés"}`, "Cargando Whisper local…", 46);
     const result = await localAI.run("transcribe", { audio: audio.buffer, language }, {
       transfer: [audio.buffer],
       onProgress: updateTaskFromAI
     });
     const chunks = result.chunks || [];
     if (!chunks.length) throw new Error("Whisper no encontró voz comprensible en el archivo.");
+    const transcriptText = chunks.map((chunk) => chunk.text).join(" ");
+    const detectedLanguage = language === "auto" ? normalizeDetectedLanguage(result.language, transcriptText) : language;
+    setSourceLanguageSilently(detectedLanguage);
     state.cues = normalizeCues(chunks.map((chunk) => ({ ...chunk, source: chunk.text, target: "" })));
     applySourceLanguageToCues();
     clearSpanishAudio();
     renderAll();
     scheduleSave();
-    completeTask("Transcripción lista", `${state.cues.length} segmentos encontrados.`);
-    toast("Transcripción terminada. Revisa el inglés antes de traducir.");
+    completeTask("Transcripción lista", `${state.cues.length} segmentos · idioma ${detectedLanguage === "es" ? "español" : "inglés"}.`);
+    toast(detectedLanguage === "es"
+      ? "Transcripción española terminada. Ya puedes escucharla o crear la voz."
+      : "Transcripción inglesa terminada. Revísala antes de traducir.");
   } catch (error) {
     failTask(error);
   }
+}
+
+function normalizeDetectedLanguage(modelLanguage, text) {
+  const model = String(modelLanguage || "").toLowerCase();
+  if (/^(es|spa|spanish)/.test(model)) return "es";
+  if (/^(en|eng|english)/.test(model)) return "en";
+  const words = String(text || "").toLowerCase().match(/[a-záéíóúñü']+/g) || [];
+  const spanishMarkers = new Set(["el", "la", "los", "las", "que", "de", "del", "una", "para", "con", "por", "como", "pero", "esta", "este", "es", "son", "y"]);
+  const englishMarkers = new Set(["the", "that", "this", "and", "with", "from", "for", "you", "your", "are", "is", "of", "to", "in", "but", "they", "we"]);
+  let spanishScore = 0;
+  let englishScore = 0;
+  for (const word of words) {
+    if (spanishMarkers.has(word) || /[áéíóúñü]/.test(word)) spanishScore += 1;
+    if (englishMarkers.has(word)) englishScore += 1;
+  }
+  return spanishScore > englishScore ? "es" : "en";
 }
 
 async function extractAudio16k(file) {
@@ -1968,7 +2033,89 @@ function finishSpeaking() {
 
 function setSpeechButtons(speaking) {
   $("#speakSpanish").textContent = speaking ? "● Leyendo español…" : "▶ Escuchar español";
-  $("#previewSpanishVoice").textContent = speaking ? "● Leyendo…" : "▶ Escuchar texto ahora";
+}
+
+async function previewSelectedVoice() {
+  const text = state.cues.map(spanishTextForCue).filter(Boolean).join(" ").slice(0, 240).trim();
+  if (!text) return toast("Todavía no hay texto español para probar.", true);
+
+  stopSpeaking(false);
+  stopVoicePreview();
+  const engine = selectedVoiceEngine();
+  const controller = new AbortController();
+  state.currentCancel = () => {
+    controller.abort();
+    if (engine === "browser") localAI.cancelAll();
+  };
+  showTask("Probando la voz seleccionada", engine === "browser" ? "Preparando la voz neural local…" : "Conectando con el motor local…", 5);
+
+  try {
+    let blob;
+    if (engine === "browser") {
+      let segment = null;
+      await localAI.run("voice", { texts: [text] }, {
+        onProgress: updateTaskFromAI,
+        onSegment: ({ audio, samplingRate }) => {
+          segment = { audio: new Float32Array(audio), samplingRate };
+        }
+      });
+      if (!segment?.audio?.length) throw new Error("La voz neural no devolvió audio para la prueba.");
+      blob = encodeWav(segment.audio, segment.samplingRate);
+    } else if (engine === "piper") {
+      const speed = Number(refs.voiceSpeed.value) / 100;
+      const response = await fetch("http://127.0.0.1:5000/synthesize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, length_scale: clamp(1 / speed, 0.65, 1.35) }),
+        signal: controller.signal
+      });
+      if (!response.ok) throw new Error("Piper no respondió. Descarga el instalador, ejecútalo y deja abierta su ventana.");
+      blob = await response.blob();
+    } else {
+      const speed = Number(refs.voiceSpeed.value) / 100;
+      const query = new URLSearchParams({ rate: String(Math.round(clamp((speed - 1) * 20, -10, 10))), volume: "100" });
+      if (refs.windowsVoice.value) query.set("voice", refs.windowsVoice.value);
+      const response = await fetch(`http://127.0.0.1:8765/synthesize?${query}`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+        body: text,
+        signal: controller.signal
+      });
+      if (!response.ok) throw new Error("La voz de Windows no respondió. Descarga el asistente, ejecútalo y pulsa Conectar.");
+      blob = await response.blob();
+    }
+
+    playVoicePreviewBlob(blob);
+    completeTask("Prueba de voz lista", "Estás oyendo realmente el motor seleccionado.");
+  } catch (error) {
+    failTask(error);
+  } finally {
+    state.currentCancel = null;
+  }
+}
+
+function playVoicePreviewBlob(blob) {
+  if (state.voicePreviewUrl) URL.revokeObjectURL(state.voicePreviewUrl);
+  state.voicePreviewUrl = URL.createObjectURL(blob);
+  refs.voicePreviewAudio.src = state.voicePreviewUrl;
+  refs.voicePreviewAudio.classList.remove("is-hidden");
+  refs.voicePreviewAudio.play().catch(() => toast("Pulsa reproducir en la prueba de voz.", true));
+}
+
+function stopVoicePreview() {
+  refs.voicePreviewAudio.pause();
+  if (Number.isFinite(refs.voicePreviewAudio.duration)) refs.voicePreviewAudio.currentTime = 0;
+}
+
+async function downloadPackagedAsset(path, filename) {
+  try {
+    const response = await fetch(chrome.runtime.getURL(path));
+    if (!response.ok) throw new Error();
+    downloadBlob(await response.blob(), filename);
+    toast(`${filename} descargado. Extráelo y sigue las instrucciones de la pantalla.`);
+  } catch (_) {
+    toast("No se encontró el asistente dentro de la extensión. Reinstala el paquete completo.", true);
+  }
 }
 
 async function playGeneratedAudio() {
@@ -1990,9 +2137,13 @@ function stopGeneratedAudio() {
 
 function updateVoiceEngineUI() {
   const engine = selectedVoiceEngine();
+  stopVoicePreview();
   $$(".voice-card").forEach((card) => card.classList.toggle("is-selected", card.querySelector("input").checked));
   refs.piperSetting.classList.toggle("is-hidden", engine !== "piper");
   refs.windowsSetting.classList.toggle("is-hidden", engine !== "windows");
+  $("#previewSpanishVoice").textContent = engine === "browser"
+    ? "▶ Probar voz neural local"
+    : engine === "piper" ? "▶ Probar Piper" : "▶ Probar voz de Windows";
   scheduleSave();
 }
 
@@ -2030,6 +2181,7 @@ async function generateSpanishVoice() {
   const usable = state.cues.filter((cue) => spanishTextForCue(cue));
   if (!usable.length) return toast("Primero escribe o traduce el texto al español.", true);
   const engine = selectedVoiceEngine();
+  stopVoicePreview();
   showTask("Creando la voz española", "Preparando los segmentos…", 3);
 
   try {
@@ -2040,7 +2192,7 @@ async function generateSpanishVoice() {
 
     const mixed = mixVoiceSegments(segments);
     const blob = encodeWav(mixed, 16000);
-    setSpanishAudio(mixed, blob, 16000);
+    setSpanishAudio(mixed, blob, 16000, state.syncOffset);
     renderAll();
     completeTask("Voz española lista", `${formatDuration(mixed.length / 16000)} de audio sincronizado.`);
     toast("La pista española está lista para escuchar y descargar.");
@@ -2132,7 +2284,8 @@ async function decodeAudioBlob(blob) {
 function mixVoiceSegments(segments) {
   const outputRate = 16000;
   const lastCueEnd = Math.max(0, ...state.cues.map((cue) => cue.end));
-  const duration = Math.max(state.mediaDuration || 0, lastCueEnd + 0.4, 1);
+  const syncOffset = clamp(Number(state.syncOffset) || 0, -10, 10);
+  const duration = Math.max(state.mediaDuration || 0, lastCueEnd + Math.max(0, syncOffset) + 0.4, 1);
   const mix = new Float32Array(Math.ceil(duration * outputRate));
   const selectedSpeed = Number(refs.voiceSpeed.value) / 100;
 
@@ -2143,7 +2296,7 @@ function mixVoiceSegments(segments) {
     const cueLength = Math.max(1, Math.round((cue.end - cue.start) * outputRate * 0.98));
     const targetLength = Math.max(1, Math.min(naturalLength, cueLength));
     const fitted = resampleToLength(segment.audio, targetLength);
-    const offset = Math.round(cue.start * outputRate);
+    const offset = Math.round(Math.max(0, cue.start + syncOffset) * outputRate);
     for (let sample = 0; sample < fitted.length && offset + sample < mix.length; sample += 1) {
       const fade = Math.min(1, sample / 100, (fitted.length - sample) / 100);
       mix[offset + sample] += fitted[sample] * Math.max(0, fade);
@@ -2159,17 +2312,20 @@ function mixVoiceSegments(segments) {
   return mix;
 }
 
-function setSpanishAudio(samples, blob, sampleRate) {
+function setSpanishAudio(samples, blob, sampleRate, syncOffset = 0) {
   clearSpanishAudio();
   state.spanishAudio = samples;
   state.spanishAudioBlob = blob;
   state.audioSampleRate = sampleRate;
+  state.generatedSyncOffset = syncOffset;
   state.spanishAudioUrl = URL.createObjectURL(blob);
   refs.spanishAudioPreview.src = state.spanishAudioUrl;
-  refs.audioMeta.textContent = `WAV · ${formatDuration(samples.length / sampleRate)} · ${(blob.size / 1024 / 1024).toFixed(1)} MB`;
+  const offsetLabel = syncOffset ? ` · desfase ${syncOffset > 0 ? "+" : ""}${syncOffset.toFixed(1)} s` : "";
+  refs.audioMeta.textContent = `WAV · ${formatDuration(samples.length / sampleRate)} · ${(blob.size / 1024 / 1024).toFixed(1)} MB${offsetLabel}`;
   refs.generatedAudioCard.classList.remove("is-hidden");
   updateCompletion();
   updateFinalSummary();
+  updateSyncStudio();
 }
 
 function clearSpanishAudio() {
@@ -2178,9 +2334,154 @@ function clearSpanishAudio() {
   state.spanishAudio = null;
   state.spanishAudioBlob = null;
   state.spanishAudioUrl = "";
+  state.generatedSyncOffset = 0;
   refs.spanishAudioPreview?.removeAttribute("src");
   refs.generatedAudioCard?.classList.add("is-hidden");
   updateFinalSummary?.();
+  updateSyncStudio?.();
+}
+
+function syncSourcePlayer() {
+  return state.mediaKind === "audio" ? refs.syncSourceAudioPreview : refs.syncVideoPreview;
+}
+
+function updateSyncMediaSource() {
+  for (const player of [refs.syncVideoPreview, refs.syncSourceAudioPreview]) {
+    player.pause();
+    player.removeAttribute("src");
+    player.load();
+    player.classList.add("is-hidden");
+  }
+  if (!state.mediaUrl || !state.mediaKind) return updateSyncStudio();
+  const player = syncSourcePlayer();
+  player.src = state.mediaUrl;
+  player.classList.remove("is-hidden");
+  player.muted = !refs.syncOriginalAudio.checked;
+  player.load();
+  updateSyncStudio();
+}
+
+function updateSyncStudio() {
+  if (!refs.syncWorkspace) return;
+  const hasMedia = Boolean(state.mediaUrl && state.mediaKind);
+  refs.syncNoMedia.classList.toggle("is-hidden", hasMedia);
+  refs.syncWorkspace.classList.toggle("is-hidden", !hasMedia);
+  refs.syncOffset.value = String(Number(state.syncOffset || 0).toFixed(1)).replace(/\.0$/, "");
+  if (!hasMedia) return;
+
+  const generated = Boolean(state.spanishAudioBlob);
+  const changed = Math.abs(state.syncOffset - state.generatedSyncOffset) > 0.001;
+  refs.syncStatus.textContent = !generated
+    ? "Genera la pista española para compararla con el archivo original."
+    : changed
+      ? `Estás probando un desfase de ${signedSeconds(state.syncOffset)}. Vuelve a generar el WAV para aplicarlo al archivo final.`
+      : `Video y voz listos para comparar. Desfase aplicado: ${signedSeconds(state.generatedSyncOffset)}.`;
+}
+
+function updateSyncOffset() {
+  const parsed = Number(String(refs.syncOffset.value).replace(",", "."));
+  if (!Number.isFinite(parsed)) return;
+  state.syncOffset = Math.round(clamp(parsed, -10, 10) * 10) / 10;
+  updateSyncStudio();
+  keepDubbedPreviewAligned();
+  scheduleSave();
+}
+
+function updateSyncOriginalAudio() {
+  const player = syncSourcePlayer();
+  if (player) player.muted = !refs.syncOriginalAudio.checked;
+}
+
+function seekSyncFromInput() {
+  const seconds = parseTime(refs.syncSeekInput.value);
+  if (!Number.isFinite(seconds)) return toast("Escribe un tiempo como 1:00, 01:23.5 o 90.", true);
+  setSyncPosition(seconds);
+}
+
+function nudgeSync(delta) {
+  const player = syncSourcePlayer();
+  if (!player?.src) return toast("Carga primero el archivo original.", true);
+  setSyncPosition((Number(player.currentTime) || 0) + delta);
+}
+
+function setSyncPosition(seconds) {
+  const player = syncSourcePlayer();
+  if (!player?.src) return toast("Carga primero el archivo original.", true);
+  const duration = Number.isFinite(player.duration) ? player.duration : state.mediaDuration;
+  const target = clamp(Number(seconds) || 0, 0, Math.max(0, duration || Number(seconds) || 0));
+  player.currentTime = target;
+  refs.syncCurrentTime.textContent = formatPreciseTime(target);
+  refs.syncSeekInput.value = formatPreciseTime(target);
+  alignDubbedPreviewAt(target);
+}
+
+function alignDubbedPreviewAt(sourceTime) {
+  if (!state.spanishAudioBlob || !Number.isFinite(refs.spanishAudioPreview.duration)) return;
+  const relativeOffset = state.syncOffset - state.generatedSyncOffset;
+  const dubbedTime = clamp(sourceTime - relativeOffset, 0, refs.spanishAudioPreview.duration || 0);
+  if (Math.abs(refs.spanishAudioPreview.currentTime - dubbedTime) > 0.08) {
+    refs.spanishAudioPreview.currentTime = dubbedTime;
+  }
+}
+
+function keepDubbedPreviewAligned() {
+  const player = syncSourcePlayer();
+  if (!player?.src) return;
+  alignDubbedPreviewAt(player.currentTime || 0);
+}
+
+function updateSyncClock(event) {
+  const player = event.currentTarget;
+  if (player !== syncSourcePlayer()) return;
+  const time = Number(player.currentTime) || 0;
+  refs.syncCurrentTime.textContent = formatPreciseTime(time);
+  if (document.activeElement !== refs.syncSeekInput) refs.syncSeekInput.value = formatPreciseTime(time);
+  if (!player.paused && state.spanishAudioBlob) {
+    const relativeOffset = state.syncOffset - state.generatedSyncOffset;
+    const expected = clamp(time - relativeOffset, 0, refs.spanishAudioPreview.duration || 0);
+    if (Math.abs(refs.spanishAudioPreview.currentTime - expected) > 0.35) refs.spanishAudioPreview.currentTime = expected;
+  }
+}
+
+async function playSynchronizedPreview() {
+  const player = syncSourcePlayer();
+  if (!player?.src) return toast("Carga primero el video o audio original.", true);
+  stopSpeaking(false);
+  stopVoicePreview();
+  updateSyncOriginalAudio();
+  alignDubbedPreviewAt(player.currentTime || 0);
+
+  const tasks = [player.play()];
+  if (state.spanishAudioBlob) tasks.push(refs.spanishAudioPreview.play());
+  const results = await Promise.allSettled(tasks);
+  if (results.some((result) => result.status === "rejected")) {
+    return toast("Chrome bloqueó el inicio automático. Pulsa otra vez Reproducir juntos.", true);
+  }
+  refs.syncStatus.textContent = state.spanishAudioBlob
+    ? `Comparando desde ${formatPreciseTime(player.currentTime)} · desfase ${signedSeconds(state.syncOffset)}.`
+    : "Reproduciendo solamente el archivo original; todavía falta generar la voz española.";
+}
+
+function pauseSynchronizedPreview() {
+  const player = syncSourcePlayer();
+  player?.pause();
+  refs.spanishAudioPreview.pause();
+  refs.syncStatus.textContent = `Pausado en ${formatPreciseTime(player?.currentTime || 0)}.`;
+}
+
+function signedSeconds(value) {
+  const number = Number(value) || 0;
+  return `${number > 0 ? "+" : ""}${number.toFixed(1)} s`;
+}
+
+function formatPreciseTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00.0";
+  const totalTenths = Math.round(seconds * 10);
+  const hours = Math.floor(totalTenths / 36000);
+  const minutes = Math.floor((totalTenths % 36000) / 600);
+  const secs = Math.floor((totalTenths % 600) / 10);
+  const tenths = totalTenths % 10;
+  return hours ? `${hours}:${pad(minutes)}:${pad(secs)}.${tenths}` : `${minutes}:${pad(secs)}.${tenths}`;
 }
 
 function downloadText(language, extension) {
@@ -2579,6 +2880,7 @@ async function saveProject() {
     cues: state.cues,
     sourceLanguage: selectedSourceLanguage(),
     voiceSpeed: refs.voiceSpeed.value,
+    syncOffset: state.syncOffset,
     voiceEngine: selectedVoiceEngine(),
     translationEngine: refs.translationEngine.value,
     updatedAt: Date.now()
@@ -2596,12 +2898,14 @@ async function restoreProject() {
     const { currentProject } = await chrome.storage.local.get("currentProject");
     if (!currentProject) return;
     refs.projectTitle.value = currentProject.title || refs.projectTitle.value;
-    const sourceRadio = $(`input[name="sourceLanguage"][value="${currentProject.sourceLanguage || "en"}"]`);
+    const sourceRadio = $(`input[name="sourceLanguage"][value="${currentProject.sourceLanguage || "auto"}"]`);
     if (sourceRadio) sourceRadio.checked = true;
     state.cues = normalizeCues(currentProject.cues || []);
     applySourceLanguageToCues();
     refs.voiceSpeed.value = currentProject.voiceSpeed || "105";
     refs.voiceSpeedValue.textContent = `${(Number(refs.voiceSpeed.value) / 100).toFixed(2)}×`;
+    state.syncOffset = clamp(Number(currentProject.syncOffset) || 0, -10, 10);
+    refs.syncOffset.value = String(state.syncOffset);
     refs.translationEngine.value = currentProject.translationEngine || "chrome";
     const voiceRadio = $(`input[name="voiceEngine"][value="${currentProject.voiceEngine || "browser"}"]`);
     if (voiceRadio) voiceRadio.checked = true;

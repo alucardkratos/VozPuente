@@ -1,4 +1,19 @@
-# Video a Español — Doblador Local
+# VozPuente — Video a Español
+
+**Versión Build Week 3.0.0.** Extensión educativa para que una persona hispanohablante convierta videos, audios y subtítulos en contenido español legible y narrado, con prioridad por herramientas gratuitas y procesamiento local.
+
+## Flujo automático principal
+
+Al pegar un enlace y elegir **Extraer + traducir**, VozPuente sigue este orden:
+
+1. Busca una pista española publicada.
+2. Si no funciona, busca una pista inglesa.
+3. Si obtiene inglés, intenta traducción de YouTube y después Chrome Translator o el modelo local OPUS-MT.
+4. Si el enlace es un MP4/MP3 directo, descarga el archivo y Whisper detecta automáticamente inglés o español antes de transcribir.
+5. Si YouTube no publica texto y bloquea su audio, explica el límite y permite subir el archivo para transcribirlo localmente.
+6. El texto español se puede escuchar inmediatamente con una voz instalada o convertir en WAV con MMS, Piper o Windows.
+
+La etapa de voz 3.0 prueba **realmente el motor seleccionado**, ofrece los asistentes de instalación desde la interfaz y permite saltar a un minuto exacto, mover ±1/±10 segundos y ajustar el desfase entre video y voz.
 
 Extensión de Chrome para convertir un video o audio en inglés a una versión narrada en español. El flujo completo queda dentro de una sola pestaña:
 
@@ -18,10 +33,10 @@ No necesita cuenta, clave API ni suscripción. Los modelos se descargan una vez 
 2. Abre `chrome://extensions` en Google Chrome.
 3. Activa **Modo de desarrollador** arriba a la derecha.
 4. Pulsa **Cargar descomprimida**.
-5. Selecciona la carpeta `DobladorEspanolLocal`.
+5. Selecciona la carpeta `VozPuente`.
 6. Pulsa el icono de la extensión para abrir el editor.
 
-Para el traductor integrado conviene Chrome 138 o posterior. Si no está disponible, la extensión ofrece un modelo local alternativo.
+Para el traductor integrado conviene Chrome 138 o posterior. Si no está disponible, la extensión ofrece un modelo local alternativo. El paquete fue preparado para Windows 10/11 y Chrome 138 o posterior.
 
 ## Uso recomendado
 
@@ -34,7 +49,7 @@ Pégalo en la caja superior y elige:
 
 Admite videos de YouTube que publiquen subtítulos, enlaces directos SRT/VTT/TXT, páginas que incluyan una pista HTML `<track>` y enlaces directos MP4/MP3. Para proteger tu privacidad, Chrome pide permiso solamente para leer el sitio que pegaste; es un permiso opcional solicitado en ese momento.
 
-La versión 2.4 consulta el reproductor actual y el panel oficial de transcripción de YouTube. Si una pista está protegida por PO token, evita repetir descargas que fallarán: abre el video en una pestaña temporal, pulsa **Mostrar transcripción**, lee los segmentos visibles, cierra esa pestaña y vuelve automáticamente al editor. Debajo del enlace aparece **Ver diagnóstico de YouTube** con el resultado de cada ruta.
+La versión 3.0 consulta el reproductor actual y el panel oficial de transcripción de YouTube. Si una pista está protegida por PO token, evita repetir descargas que fallarán: abre el video en una pestaña temporal, pulsa **Mostrar transcripción**, lee los segmentos visibles, cierra esa pestaña y vuelve automáticamente al editor. Debajo del enlace aparece **Ver diagnóstico de YouTube** con el resultado de cada ruta.
 
 ### Si ya tienes SRT o VTT
 
@@ -59,6 +74,18 @@ Cuando generes la pista neural, aparecerán controles separados para **Reproduci
 - **Voces de Windows:** ejecuta `Iniciar_Voz_Windows.bat`. Usa las voces que ya estén instaladas en Windows. Es más rápida, aunque la naturalidad depende de la voz disponible.
 
 Los dos servidores opcionales solo escuchan en `127.0.0.1`; no aceptan conexiones desde otros equipos.
+
+En la interfaz, selecciona Piper o Windows y pulsa **Descargar instalador/asistente**. Chrome no permite ejecutar programas de Windows directamente por seguridad: debes extraer el ZIP, ejecutar el BAT y regresar a la extensión para pulsar **Conectar**.
+
+## Calibración exacta
+
+En el paso Voz encontrarás **Calibración exacta**:
+
+- Escribe `1:00`, `01:23.5` o un número de segundos.
+- Usa −10, −1, +1 y +10 segundos sin volver al comienzo.
+- Pulsa **Reproducir juntos** para comparar archivo original y voz española.
+- Introduce un desfase entre −10 y +10 segundos. Positivo retrasa la voz; negativo la adelanta.
+- Vuelve a generar el WAV para aplicar el desfase al audio final.
 
 ## Descargas
 

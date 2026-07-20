@@ -1,0 +1,14 @@
+VOZPUENTE — ASISTENTE DE VOZ WINDOWS
+====================================
+
+1. Extrae los tres archivos de este ZIP en una misma carpeta.
+2. Haz doble clic en Iniciar_Voz_Windows.bat.
+3. Windows abrirá una ventana que enumera las voces instaladas.
+4. Deja esa ventana abierta.
+5. Regresa a VozPuente, selecciona “Voces de Windows” y pulsa “Conectar”.
+
+El servidor solamente escucha en 127.0.0.1:8765. No permite conexiones
+desde otros equipos y no envía el texto a internet.
+
+Si Windows muestra una advertencia, revisa que ejecutaste el archivo BAT
+desde una carpeta extraída y no desde dentro del ZIP.

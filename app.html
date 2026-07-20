@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Video a Español — Doblador Local</title>
+    <title>VozPuente — Video a Español</title>
     <link rel="stylesheet" href="app.css">
   </head>
   <body>
@@ -14,8 +14,8 @@
             <span>ES</span>
           </div>
           <div>
-            <strong>Video a Español</strong>
-            <small>Doblador local</small>
+            <strong>VozPuente</strong>
+            <small>Video a español · local</small>
           </div>
         </div>
 
@@ -98,12 +98,16 @@
               </div>
               <div class="language-switch">
                 <label class="is-selected">
-                  <input type="radio" name="sourceLanguage" value="en" checked>
+                  <input type="radio" name="sourceLanguage" value="auto" checked>
+                  <span><b>Detectar automáticamente</b><small>Whisper identifica inglés o español</small></span>
+                </label>
+                <label>
+                  <input type="radio" name="sourceLanguage" value="en">
                   <span><b>Está en inglés</b><small>Transcribir y traducir</small></span>
                 </label>
                 <label>
                   <input type="radio" name="sourceLanguage" value="es">
-                  <span><b>Ya está en español</b><small>Leer directamente</small></span>
+                  <span><b>Ya está en español</b><small>Transcribir y leer directamente</small></span>
                 </label>
               </div>
             </div>
@@ -292,12 +296,18 @@
                 <div class="range-control"><input id="voiceSpeed" type="range" min="85" max="130" value="105"><output id="voiceSpeedValue">1.05×</output></div>
               </div>
               <div class="setting-row server-setting is-hidden" id="piperSetting">
-                <div><label>Piper local</label><p>Ejecuta <b>Instalar_e_Iniciar_Piper.bat</b> y deja abierta la ventana.</p></div>
-                <button class="secondary-button" id="checkPiper" type="button">Comprobar conexión</button>
+                <div><label>Piper local</label><p>1. Descarga y ejecuta el instalador. 2. Deja abierta su ventana. 3. Comprueba la conexión.</p></div>
+                <div class="server-actions">
+                  <button class="secondary-button" id="downloadPiperInstaller" type="button">↓ Descargar instalador</button>
+                  <button class="secondary-button" id="checkPiper" type="button">Comprobar conexión</button>
+                </div>
               </div>
               <div class="setting-row server-setting is-hidden" id="windowsSetting">
-                <div><label for="windowsVoice">Voz de Windows</label><p>Ejecuta <b>Iniciar_Voz_Windows.bat</b> antes de generar.</p></div>
-                <div class="inline-control"><select id="windowsVoice"><option value="">Voz predeterminada</option></select><button class="secondary-button" id="checkWindows" type="button">Conectar</button></div>
+                <div><label for="windowsVoice">Voz de Windows</label><p>1. Descarga y extrae el asistente. 2. Ejecuta <b>Iniciar_Voz_Windows.bat</b>. 3. Pulsa Conectar.</p></div>
+                <div class="server-actions">
+                  <button class="secondary-button" id="downloadWindowsCompanion" type="button">↓ Descargar asistente</button>
+                  <div class="inline-control"><select id="windowsVoice"><option value="">Voz predeterminada</option></select><button class="secondary-button" id="checkWindows" type="button">Conectar</button></div>
+                </div>
               </div>
             </div>
 
@@ -308,10 +318,11 @@
 
             <div class="voice-action">
               <div class="voice-action-buttons">
-                <button class="secondary-button large-button" id="previewSpanishVoice" type="button">▶ Escuchar texto ahora</button>
+                <button class="secondary-button large-button" id="previewSpanishVoice" type="button">▶ Probar voz seleccionada</button>
                 <button class="primary-button large-button" id="generateVoice" type="button"><span class="button-icon">↓</span> Generar voz española</button>
               </div>
-              <p id="voiceHint">Se creará un WAV sincronizado con los tiempos de la traducción.</p>
+              <p id="voiceHint">La prueba usa realmente el motor seleccionado. Después se creará un WAV sincronizado.</p>
+              <audio id="voicePreviewAudio" class="voice-preview-audio is-hidden" controls></audio>
             </div>
 
             <div class="card generated-audio is-hidden" id="generatedAudioCard">
@@ -321,6 +332,56 @@
                 <button class="secondary-button" id="playGeneratedAudio" type="button">▶ Reproducir</button>
                 <button class="text-button" id="stopGeneratedAudio" type="button">■ Detener</button>
                 <button class="secondary-button" id="downloadSpanishWav" type="button">Descargar WAV</button>
+              </div>
+            </div>
+
+            <div class="card sync-studio" id="syncStudio">
+              <div class="sync-heading">
+                <div>
+                  <span class="eyebrow">CALIBRACIÓN EXACTA</span>
+                  <h2>Compara el video y la voz desde cualquier minuto</h2>
+                  <p>Escribe un tiempo como <b>1:00</b> o <b>01:23.5</b>. Voz y video saltarán juntos sin reiniciar el proyecto.</p>
+                </div>
+                <span class="sync-clock" id="syncCurrentTime">0:00</span>
+              </div>
+
+              <div class="sync-empty" id="syncNoMedia">
+                Carga primero el video o audio original en el paso 1 para activar la calibración.
+              </div>
+
+              <div class="sync-workspace is-hidden" id="syncWorkspace">
+                <div class="sync-player-wrap">
+                  <video id="syncVideoPreview" controls playsinline></video>
+                  <audio id="syncSourceAudioPreview" controls></audio>
+                </div>
+
+                <div class="sync-controls">
+                  <div class="sync-seek-row">
+                    <label for="syncSeekInput">Ir al tiempo exacto</label>
+                    <div class="sync-seek-actions">
+                      <input id="syncSeekInput" type="text" inputmode="decimal" value="0:00" placeholder="1:00">
+                      <button class="primary-button" id="syncSeek" type="button">Ir</button>
+                    </div>
+                    <div class="nudge-buttons" aria-label="Mover el punto de reproducción">
+                      <button class="secondary-button" data-sync-nudge="-10" type="button">−10 s</button>
+                      <button class="secondary-button" data-sync-nudge="-1" type="button">−1 s</button>
+                      <button class="secondary-button" data-sync-nudge="1" type="button">+1 s</button>
+                      <button class="secondary-button" data-sync-nudge="10" type="button">+10 s</button>
+                    </div>
+                  </div>
+
+                  <div class="sync-offset-row">
+                    <div><label for="syncOffset">Desfase de la voz</label><p>Positivo retrasa la voz; negativo la adelanta. Se aplica al volver a generar el WAV.</p></div>
+                    <div class="offset-control"><input id="syncOffset" type="number" min="-10" max="10" step="0.1" value="0"><span>segundos</span></div>
+                  </div>
+
+                  <label class="check-row sync-original-toggle"><input id="syncOriginalAudio" type="checkbox"><span>Escuchar también el audio original</span></label>
+                  <div class="sync-play-actions">
+                    <button class="primary-button" id="syncPlay" type="button">▶ Reproducir juntos</button>
+                    <button class="secondary-button" id="syncPause" type="button">Ⅱ Pausar</button>
+                  </div>
+                  <p class="sync-status" id="syncStatus">Genera la pista española para compararla con el archivo original.</p>
+                </div>
               </div>
             </div>
 
