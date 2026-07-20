@@ -162,6 +162,7 @@ button { color: inherit; }
 .link-import-copy p { margin: 7px 0 0; color: var(--muted); font-size: 9px; }
 .link-import-copy p.is-error { color: var(--danger); }
 .link-import-copy p.is-success { color: var(--success); }
+.link-auto-read { margin-top: 12px; }
 .link-diagnostics { margin-top: 8px; padding: 8px 10px; border: 1px solid #dbe2de; border-radius: 9px; background: rgba(255,255,255,.75); color: #647078; font-size: 10px; }
 .link-diagnostics summary { cursor: pointer; color: var(--teal); font-weight: 800; }
 .link-diagnostics ol { margin: 7px 0 0; padding-left: 19px; line-height: 1.45; }

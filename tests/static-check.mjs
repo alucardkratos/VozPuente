@@ -39,6 +39,7 @@ for (const path of requiredFiles) {
 const requiredFlowEvidence = [
   "preferredLanguage = translateToSpanish ? \"es\"",
   "normalizeDetectedLanguage",
+  "autoReadSpanishAfterImport",
   "previewSelectedVoice",
   "playSynchronizedPreview",
   "downloadWindowsCompanion"

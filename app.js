@@ -472,6 +472,7 @@ async function importFromLink(translateToSpanish) {
       if (translateToSpanish && state.cues.length) {
         await translateAll();
         goToStep(3);
+        autoReadSpanishAfterImport();
       }
       return;
     }
@@ -505,6 +506,7 @@ async function importFromLink(translateToSpanish) {
       goToStep(translateToSpanish || readyTranslations ? 3 : 2);
       if (translateToSpanish && translationsComplete) toast("La traducción española está lista para revisar o escuchar.");
     }
+    if (translateToSpanish) autoReadSpanishAfterImport();
   } catch (error) {
     if (error?.name === "AbortError") return failTask(new Error("Tarea cancelada."));
     setLinkStatus(friendlyLinkError(error), "error");
@@ -512,6 +514,12 @@ async function importFromLink(translateToSpanish) {
   } finally {
     if (state.currentCancel === cancel) state.currentCancel = null;
   }
+}
+
+function autoReadSpanishAfterImport() {
+  if (!$("#autoReadSpanish")?.checked) return;
+  if (!state.cues.some((cue) => spanishTextForCue(cue))) return;
+  window.setTimeout(() => speakSpanishNow(), 120);
 }
 
 function setSourceLanguageSilently(language) {

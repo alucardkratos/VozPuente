@@ -17,7 +17,7 @@ When a user pastes a supported link, the extension follows a clear fallback ladd
 3. Translate English captions with YouTube when available, Chrome Translator, or local OPUS-MT.
 4. For a direct MP4/MP3 link or an uploaded file, use local Whisper to detect English or Spanish and transcribe the audio.
 5. Let the user edit every segment while preserving timestamps.
-6. Read Spanish text immediately with an installed system voice.
+6. Read Spanish text automatically with an installed system voice after **Extract + translate** (enabled by default).
 7. Generate synchronized WAV speech with local MMS TTS, optional Piper, or installed Windows SAPI voices.
 8. Seek to an exact time, compare source and dubbed audio, adjust offset, and export TXT, SRT, VTT, WAV, or WebM.
 

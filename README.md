@@ -11,7 +11,7 @@ Al pegar un enlace y elegir **Extraer + traducir**, VozPuente sigue este orden:
 3. Si obtiene inglés, intenta traducción de YouTube y después Chrome Translator o el modelo local OPUS-MT.
 4. Si el enlace es un MP4/MP3 directo, descarga el archivo y Whisper detecta automáticamente inglés o español antes de transcribir.
 5. Si YouTube no publica texto y bloquea su audio, explica el límite y permite subir el archivo para transcribirlo localmente.
-6. El texto español se puede escuchar inmediatamente con una voz instalada o convertir en WAV con MMS, Piper o Windows.
+6. El texto español se escucha automáticamente con una voz instalada (opción activada por defecto) o se convierte en WAV con MMS, Piper o Windows.
 
 La etapa de voz 3.0 prueba **realmente el motor seleccionado**, ofrece los asistentes de instalación desde la interfaz y permite saltar a un minuto exacto, mover ±1/±10 segundos y ajustar el desfase entre video y voz.
 
